@@ -44,7 +44,7 @@ def setting_means(c):
 if __name__ == "__main__":
     # Setting up the dataset and number of clusters (n) variable
     n = int(input('Introduce la cantidad de clusters: '))
-    filename = input('Introduce el nombre del archivo con el dataset a utilizar: ')
+    filename = input('Introduce la ruta del archivo con el dataset a utilizar: ')
     csv = pd.read_csv(filename, header=None)
     csv = csv.loc[:, [i for i in range(csv.shape[1]) if ((csv[i].dtype == 'float64' or csv[i].dtype == 'int64'))]]
     print("Archivo cargado exitosamente.")
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
         # Graph designed to work with 2 dimensions
         for i in range(n) :
-            plt.scatter(clusters[i][:, 0], clusters[i][:,1], color=colors[i%len(colors)], alpha=0.5)
+            plt.scatter(clusters[i][:, 0], clusters[i][:, 1], color=colors[i%len(colors)], alpha=0.5)
         plt.show()
 
     else:

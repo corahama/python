@@ -47,7 +47,7 @@ if __name__ == "__main__":
     if rank == 0:
         etapas = 10
 
-        iris = pd.read_csv('/home/fernando-dlz/Documents/python/computo avanzado/multithreading/data/iris.data', header=None)
+        iris = pd.read_csv('mpi/data/iris.data', header=None)
 
         # TRAINING    
         i_virginicat = np.array(iris.iloc[100:110, [0,1,2,3]])

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from itertools import count
 
+
 class pso_algorithm():
     def __init__(self, dimentions, particles, fitness_function, max_velocity=10):
         # DEFINING INITIAL CONSTANTS
