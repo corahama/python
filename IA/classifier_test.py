@@ -7,7 +7,7 @@ import numpy as np
 from naive_bayes import get_model, classify
 
 
-bag_itr = 1
+bag_itr = 100
 # dataset = ""
 # cl_col = 0
 # ch_cols = 0

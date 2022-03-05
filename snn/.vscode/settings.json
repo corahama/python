@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--disable=C0111,",
+        "--max-line-length=105",
+    ],
+    // "python.linting.pycodestyleEnabled": true,
+}
