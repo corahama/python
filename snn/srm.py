@@ -8,7 +8,7 @@ class SRM():
         self.tc = 0
         self.u = []
         self.spikeTrain = []
-        self.V = 4 # mV
+        self.V = 6 # mV
         # Eta kernel parameters
         self.eta_0 = 22 # mV
         self.tau_refr = 30 # ms
@@ -82,8 +82,8 @@ def main():
     # plt.plot(np.arange(1000), neuron.u)
     # plt.show()
 
-    ini, end, step = 4, 15, .5
-    frs = np.zeros(32, dtype='float')
+    ini, end, step = 10, 20, .5
+    frs = np.zeros(int((end-ini)/step), dtype='float')
     for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
         frs[i] = SRM().run(i_ext)
         print(f'i_ext({i_ext})={frs[i]}')

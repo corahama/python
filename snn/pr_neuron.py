@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from pso import PSO
-from bms import BMS
-# from srm import SRM
+from pso_multiprocessing import PSO
+# from bms import BMS
+from srm import SRM
 
 # Global variables
 DATASET = pd.read_csv('datasets/iris.data', header=None).values
@@ -52,8 +52,8 @@ def main():
 
     ch_cols = (1, DATASET.shape[1]) if CL_COL == 0 else (0, DATASET.shape[1]-1)
     divs = get_divs()
-    sn_model = BMS()
-    # sn_model = SRM()
+    # sn_model = BMS()
+    sn_model = SRM()
 
 
     # ***** Setting up training and testing subsets *****
@@ -71,8 +71,7 @@ def main():
     testing_st = np.array(testing_st)
 
     # Generate training subset
-    training_st = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0)
-    sumation = 0
+    training_st, sumation = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0), 0
     for i in range(len(divs)-1):
         sumation += testing_item_idxs[i].shape[0]
         divs[i+1] -= sumation
@@ -81,7 +80,8 @@ def main():
 
     # ***** Configure model *****
     weights, history = PSO(training_st, ch_cols).run()
-    # weights = [0.46156209, 0.74311844, 0.75337077, 0.33797425]
+    # weights = [0.29408942, 0.16159998, 0.78845346, 0.14584263]
+    # weights = [0.69351206, -0.04054632, 0.46296685, 0.711223]
     afr = np.zeros(len(training_st), dtype='float')
 
     # For each class
@@ -95,7 +95,7 @@ def main():
             firing_trace = sn_model.get_firing_trace(np.dot(e[ch_cols[0]:ch_cols[1]], weights))
             firing_rates[i] = firing_trace.shape[0]
 
-            # Graph firing track
+            # Graph firing trace
             plt.scatter(firing_trace, np.full(firing_trace.shape[0], cl_track+i, dtype='int'),
                         c=colors[cl_idx%len(colors)], s=10)
 
@@ -116,15 +116,15 @@ def main():
 
             arg_min_idx, dis = 0, abs(afr[0]-fr)
             for i in range(1, afr.shape[0]):
-                if abs(afr[i]-fr) < dis: 
+                if abs(afr[i]-fr) < dis:
                     arg_min_idx = i
-                    dis = afr[i]-fr
+                    dis = abs(afr[i]-fr)
 
             if arg_min_idx == cl_idx: accuracy += 1
 
         total_accuracy += accuracy
         print(f'· Class \'{e[CL_COL]}\': {accuracy}/{cl.shape[0]}')
-    print(f'Total accuracy: {total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%')
+    print(f'Total accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%')
 
     # With testing subset
     print('\n****Testing Subset Results****')
@@ -139,14 +139,14 @@ def main():
             for i in range(1, afr.shape[0]):
                 if abs(afr[i]-fr) < dis:
                     arg_min_idx = i
-                    dis = afr[i]-fr
+                    dis = abs(afr[i]-fr)
 
 
             if arg_min_idx == cl_idx: accuracy += 1
 
         print(f'· Class \'{e[CL_COL]}\': {accuracy}/{cl.shape[0]}')
         total_accuracy += accuracy
-    print(f'Total accuracy: {total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%')
+    print(f'Total accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%')
 
     return 0
 
