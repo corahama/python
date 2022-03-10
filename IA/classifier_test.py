@@ -7,43 +7,38 @@ import numpy as np
 from naive_bayes import get_model, classify
 
 
-bag_itr = 100
+bag_itr = 1
 # dataset = ""
 # cl_col = 0
-# ch_cols = 0
 
-dataset = pd.read_csv("datasets/iris.data", header=None).values
-cl_col = 4
-ch_cols = (0,1,2,3)
+DATASET = pd.read_csv("datasets/iris.data", header=None).values
+CL_COL = 4
 
-# dataset = pd.read_csv("datasets/wine.data", header=None).values
+# DATASET = pd.read_csv("datasets/wine.data", header=None).values
 # cl_col = 0
-# ch_cols = (1,2,3,4,5,6,7,8,9,10,11,12,13)
 
-# cl_col = 0
-# dataset = pd.read_csv("datasets/balance-scale.data", header=None).sort_values(
+# DATASET = pd.read_csv("datasets/balance-scale.data", header=None).sort_values(
 #             by=cl_col, ignore_index=True).values
-# ch_cols = (1,2,3,4)
+# cl_col = 0
 
-# dataset = pd.read_csv("datasets/glass.data", header=None).values
+# DATASET = pd.read_csv("datasets/glass.data", header=None).values
 # cl_col = 9
-# ch_cols = (0,1,2,3,4,5,6,7,8)
 
 
 # Multiprocessing function to calculate class divisions of chunks
 def calc_divs(beginning, final):
-    cs_name = dataset[beginning][cl_col]
+    cs_name = DATASET[beginning][CL_COL]
     divs = []
-    for i, e in enumerate(dataset[beginning:final], start=beginning):
-        if e[cl_col] != cs_name:
+    for i, e in enumerate(DATASET[beginning:final], start=beginning):
+        if e[CL_COL] != cs_name:
             divs.append(i)
-            cs_name = e[cl_col]
+            cs_name = e[CL_COL]
     return divs
 
 # Function to calculate dataset class divisions
 def get_divs():
     ps = 4
-    ds_len = len(dataset)
+    ds_len = len(DATASET)
     ck_size = int(ds_len/ps)
     with Pool(ps) as pool:
         results = [pool.apply_async(calc_divs, args=(i*ck_size, i*ck_size+ck_size if
@@ -58,40 +53,37 @@ def get_divs():
 
 
 def main():
-    # global dataset, ch_cols, cl_col, bag_itr
+    # global dataset, ch_cols, CL_COL, bag_itr
 
     # dataset_str = input("Introducce la ruta del dataset a trabajar: ")
-    # ch_cols = input("Introduce las columnas a utilizar, separadas por coma (ej:1,3,4): ").split(',')
-    # ch_cols = [int(e) for e in ch_cols]
-    # cl_col = int(input("Introduce el indice de la columna de las clases: "))
+    # CL_COL = int(input("Introduce el indice de la columna de las clases: "))
     # dataset = pd.read_csv(dataset_str, header=None).sort_values(
-    #         by=cl_col, ignore_index=True).values
+    #         by=CL_COL, ignore_index=True).values
     # bag_itr = int(input("Introduce el numero de muestras bagging: "))
 
+    ch_cols = (1, DATASET.shape[1]) if CL_COL == 0 else (0, DATASET.shape[1]-1)
     divs = get_divs()
-    print()
 
 
     # ***** Setting up training and testing subsets *****
     # Generate random indexes to extract the testing elements from dataset
-    testing_items = []
+    testing_item_idxs = []
+    rng = np.random.default_rng()
     for i in range(len(divs)-1):
-        indexes = []
-        while len(indexes) < int((divs[i+1]-divs[i])*.1):
-            n = random.randint(divs[i], divs[i+1]-1)
-            if n not in indexes: indexes.append(n)
-        testing_items.append(indexes)
+        indexes = rng.choice(np.arange(divs[i],divs[i+1]), int((divs[i+1]-divs[i])*.1), replace=False)
+        testing_item_idxs.append(indexes)
 
     # Generate testing subset
     testing_st = []
-    for items in testing_items:
-        testing_st.append(dataset.take(items, axis=0))
+    for indexes in testing_item_idxs:
+        testing_st.append(DATASET[indexes, :])
     testing_st = np.array(testing_st)
 
     # Generate training subset
-    training_st = np.delete(dataset, [i for sublist in testing_items for i in sublist], axis=0)
-    for i in range(1, len(divs)):
-        divs[i] -= sum([len(item) for item in testing_items[0:i]])
+    training_st, sumation = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0), 0
+    for i in range(len(divs)-1):
+        sumation += testing_item_idxs[i].shape[0]
+        divs[i+1] -= sumation
     training_st = np.split(training_st, divs[1: len(divs)-1])
 
 
@@ -114,11 +106,11 @@ def main():
         for e in cl:
             votes = {x : 0 for x in range(len(training_st))}
             for b in range(bag_itr):
-                votes[classify(e, ch_cols, models[b][0], models[b][1])] += 1
+                votes[classify(e[ch_cols[0]:ch_cols[1]], models[b][0], models[b][1])] += 1
             if max(zip(votes.values(), votes.keys()))[1] == cl_i: success += 1
         total_success += success
 
-        print(f"· class <{cl[0][cl_col]}>: {success}/{cl.shape[0]}")
+        print(f"· class <{cl[0][CL_COL]}>: {success}/{cl.shape[0]}")
     print(f"Rendimiento total: {total_success*100/divs[-1]:.2f}%")
     print()
 
@@ -130,11 +122,11 @@ def main():
         for e in cl:
             votes = {x : 0 for x in range(len(testing_st))}
             for b in range(bag_itr):
-                votes[classify(e, ch_cols, models[b][0], models[b][1])] += 1
+                votes[classify(e[ch_cols[0]:ch_cols[1]], models[b][0], models[b][1])] += 1
             if max(zip(votes.values(), votes.keys()))[1] == cl_i: success += 1
         total_success += success
 
-        print(f"· class <{cl[0][cl_col]}>: {success}/{cl.shape[0]}")
+        print(f"· class <{cl[0][CL_COL]}>: {success}/{cl.shape[0]}")
     print(f"Rendimiento total: {total_success*100/sum([len(elms) for elms in testing_st]):.2f}%")
 
 

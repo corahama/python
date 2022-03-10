@@ -9,7 +9,7 @@ def process_bunch(start, iterations, step):
     return prod
 
 if __name__ == "__main__":
-    iterations = 1000000000
+    iterations = 100000000
     processors = 8
 
     pool = Pool(processors)
