@@ -1,13 +1,13 @@
 import sys
-import numpy as np
 from multiprocessing import Pool, cpu_count
 
-# from bms import BMS
-from srm import SRM
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 
 class PSO():
-    def __init__(self, dataset, ch_cols, max_iters=50, max_vel=.2):
+    def __init__(self, dataset, ch_cols, sn_model, max_iters=50, max_vel=.2):
         # Defining initial constants
         self.dataset = dataset # n dimentional numpy array
         self.ch_cols = ch_cols # first and last characteristic columns
@@ -22,8 +22,7 @@ class PSO():
         self.proc = cpu_count()
 
         # SN Model
-        # self.sn_model = BMS()
-        self.sn_model = SRM()
+        self.sn_model = sn_model
 
         # Definition of the initial random values and the initial best set
         self.swarm = np.random.rand(self.population, self.ch_size)
@@ -33,7 +32,16 @@ class PSO():
         #         self.swarm[i,j] = -self.swarm[i,j]
         #         self.velocities[i,j] = -self.velocities[i,j]
         self.sw_best = self.swarm.copy()
-        self.sw_best_fitnesses = np.array([self.fitness_function(particle) for particle in self.swarm])
+
+        self.sw_best_fitnesses = np.zeros(self.population, dtype='float')
+        pool = Pool(self.proc)
+        results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.proc)]
+        pool.close()
+        pool.join()
+        for r in results:
+            for i, p_fitness in r.get():
+                self.sw_best_fitnesses[i] = p_fitness
+
         self.global_idx = 0
 
         # Array to track the algorithm evolution
@@ -44,7 +52,7 @@ class PSO():
         for iteration in range(self.max_iters):
             # Configuring and executing pool
             pool = Pool(self.proc)
-            results = [pool.apply_async(self.prl_fitness, args=(i,)) for i in range(self.proc)]
+            results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.proc)]
             pool.close()
             pool.join()
 
@@ -70,13 +78,17 @@ class PSO():
             self.history[iteration] = self.sw_best_fitnesses[self.global_idx]
             print(f'iteration {iteration+1}: {self.sw_best_fitnesses[self.global_idx]}')
 
+        plt.plot(range(self.max_iters), self.history)
+        plt.savefig('w_evolution_history.png')
+
         return self.sw_best[self.global_idx], self.history
 
-    def prl_fitness(self, i):
-        return [(i, self.fitness_function(self.swarm[i])) for i in range(i, self.population, self.proc)]
+    """Function excecuted by each process in pool"""
+    def prll_fitness(self, ini):
+        return [(i, self.fitness_func(self.swarm[i])) for i in range(ini, self.population, self.proc)]
 
     """Objective function for evolutive process"""
-    def fitness_function(self, values):
+    def fitness_func(self, values):
         afr = np.zeros(len(self.dataset), dtype='float')
         sdfr = np.zeros(len(self.dataset), dtype='float')
 
@@ -103,17 +115,25 @@ class PSO():
 def main():
     import pandas as pd
     import matplotlib.pyplot as plt
+    
+
     from pr_neuron import get_divs
+    from bms import BMS
+    from srm import SRM
+
 
     dataset = pd.read_csv('datasets/iris.data', header=None).values
-    cl_col = 4
-    ch_cols = (1, dataset.shape[1]) if cl_col == 0 else (0, dataset.shape[1]-1)
-    cl_divs = get_divs()
+    cl_clm = 4
+    ch_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
+    cl_divs = get_divs(dataset, cl_clm)
     dataset = np.split(dataset, cl_divs[1: len(cl_divs)-1])
 
-    best, history = PSO(dataset, ch_cols).run()
+    sn_model = BMS()
+    # sn_model = SRM()
+
+    best, history = PSO(dataset, ch_clms, sn_model).run()
     print('[', ', '.join(map(str, best)), ']')
-    plt.plot(np.arange(history.shape[0]), history, c='b')
+    plt.plot(range(history.shape[0]), history, c='b')
     plt.show()
 
 

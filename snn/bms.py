@@ -3,7 +3,7 @@ from numpy import arange
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
-    def __init__(self, gamma=0.7, theta=10):
+    def __init__(self, gamma=0.7, theta=110):
         self.gamma = gamma
         self.theta = theta
 
@@ -43,13 +43,12 @@ class BMS():
 def main():
     import numpy as np
 
-    frs = np.zeros(12, dtype='float')
-
-    for i, i_ext in enumerate(np.arange(4,10,.5, dtype='float')):
+    ini, end, step = 140, 160, 1
+    frs = np.zeros(int((end-ini)/step), dtype='float')
+    for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
         frs[i] = BMS().run(i_ext)
         print(f'i_ext({i_ext})={frs[i]}')
-
-    print('standar deviation:', np.std(frs))
+    print(np.std(frs))
 
 
 def graph_bms():
@@ -64,5 +63,5 @@ def graph_bms():
 
 
 if __name__ == '__main__':
-    # main()
-    graph_bms()
+    main()
+    # graph_bms()

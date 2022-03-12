@@ -1,38 +1,42 @@
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
+from math import ceil
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from pso_multiprocessing import PSO
-# from bms import BMS
+from bms import BMS
 from srm import SRM
 
 # Global variables
-DATASET = pd.read_csv('datasets/iris.data', header=None).values
-CL_COL = 4
+# DATASET = pd.read_csv('datasets/iris.data', header=None).values
+# CL_CLM = 4
+
+DATASET = pd.read_csv('datasets/wine.data', header=None).values
+CL_CLM = 0
 
 
-"""Multiprocessing function to calculate class divisions in pool chunks"""
-def calc_divs(beginning, ck_size):
+"""Function excecuted by each process in pool to calculate class divisions"""
+def calc_divs(ds, cl_clm, beginning, ck_size):
     divs = []
-    cs_name = DATASET[beginning, CL_COL]
-    for i, e in enumerate(DATASET[beginning:beginning+ck_size], start=beginning):
-        if e[CL_COL] != cs_name:
+    cl_name = ds[beginning, cl_clm]
+    for i, e in enumerate(ds[beginning:beginning+ck_size], start=beginning):
+        if e[cl_clm] != cl_name:
             divs.append(i)
-            cs_name = e[CL_COL]
+            cl_name = e[cl_clm]
 
     return divs
 
 """Function to calculate dataset class divisions"""
-def get_divs():
-    ps = 4
-    ds_len = len(DATASET)
-    ck_size = int(ds_len/ps) + 1
+def get_divs(ds, cl_clm):
+    ps = cpu_count()
+    ds_len = len(ds)
+    ck_size = ceil(ds_len/ps)
 
     with Pool(ps) as pool:
-        results = [pool.apply_async(calc_divs, args=(i*ck_size, ck_size if (i+1)*ck_size <= ds_len
-                    else ds_len%ck_size)) for i in range(ps)]
+        results = [pool.apply_async(calc_divs, args=(ds, cl_clm, i*ck_size, ck_size 
+                    if (i+1)*ck_size <= ds_len else ds_len%ck_size)) for i in range(ps)]
         pool.close()
         pool.join()
 
@@ -47,14 +51,13 @@ def get_divs():
 def main():
     # global DATASET
     # dataset_str = input("Introducce la ruta del dataset a trabajar: ")
-    # cl_col = int(input("Introduce el indice de la columna de clases: "))
-    # DATASET = pd.read_csv(dataset_str, header=None).sort_values(by=cl_col, ignore_index=True).values
+    # CL_CLM = int(input("Introduce el indice de la columna de clases: "))
+    # DATASET = pd.read_csv(dataset_str, header=None).sort_values(by=CL_CLM, ignore_index=True).values
 
-    ch_cols = (1, DATASET.shape[1]) if CL_COL == 0 else (0, DATASET.shape[1]-1)
-    divs = get_divs()
+    ch_cols = (1, DATASET.shape[1]) if CL_CLM == 0 else (0, DATASET.shape[1]-1)
+    divs = get_divs(DATASET, CL_CLM)
     # sn_model = BMS()
     sn_model = SRM()
-
 
     # ***** Setting up training and testing subsets *****
     # Generate random indexes to extract the testing elements from dataset
@@ -68,20 +71,22 @@ def main():
     testing_st = []
     for indexes in testing_item_idxs:
         testing_st.append(DATASET[indexes, :])
-    testing_st = np.array(testing_st)
+    testing_st = np.array(testing_st, dtype='object')
 
     # Generate training subset
-    training_st, sumation = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0), 0
+    training_st, summation = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0), 0
     for i in range(len(divs)-1):
-        sumation += testing_item_idxs[i].shape[0]
-        divs[i+1] -= sumation
+        summation += testing_item_idxs[i].shape[0]
+        divs[i+1] -= summation
     training_st = np.split(training_st, divs[1: len(divs)-1])
+
+    del testing_item_idxs, indexes, rng, summation, divs
 
 
     # ***** Configure model *****
-    weights, history = PSO(training_st, ch_cols).run()
-    # weights = [0.29408942, 0.16159998, 0.78845346, 0.14584263]
-    # weights = [0.69351206, -0.04054632, 0.46296685, 0.711223]
+    weights, _ = PSO(training_st, ch_cols, sn_model).run()
+    print(weights)
+    # weights = [0.3037256,  0.10523379, 0.69746353, 0.8838105 ] # iris
     afr = np.zeros(len(training_st), dtype='float')
 
     # For each class
@@ -101,8 +106,11 @@ def main():
 
         cl_track += cl.shape[0]
         afr[cl_idx] = np.mean(firing_rates)
-
     # plt.show()
+    plt.savefig('firing_trace.png')
+
+    del cl_track, firing_trace, colors, firing_rates
+
 
     # ***** Comparations *****
     # With training subset
@@ -123,7 +131,7 @@ def main():
             if arg_min_idx == cl_idx: accuracy += 1
 
         total_accuracy += accuracy
-        print(f'· Class \'{e[CL_COL]}\': {accuracy}/{cl.shape[0]}')
+        print(f'· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}')
     print(f'Total accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%')
 
     # With testing subset
@@ -144,11 +152,11 @@ def main():
 
             if arg_min_idx == cl_idx: accuracy += 1
 
-        print(f'· Class \'{e[CL_COL]}\': {accuracy}/{cl.shape[0]}')
+        print(f'· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}')
         total_accuracy += accuracy
     print(f'Total accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%')
 
-    return 0
+    return
 
 
 if __name__ == '__main__':

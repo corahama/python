@@ -15,14 +15,14 @@ DATASET = pd.read_csv("datasets/iris.data", header=None).values
 CL_COL = 4
 
 # DATASET = pd.read_csv("datasets/wine.data", header=None).values
-# cl_col = 0
+# CL_COL = 0
 
 # DATASET = pd.read_csv("datasets/balance-scale.data", header=None).sort_values(
 #             by=cl_col, ignore_index=True).values
-# cl_col = 0
+# CL_COL = 0
 
 # DATASET = pd.read_csv("datasets/glass.data", header=None).values
-# cl_col = 9
+# CL_COL = 9
 
 
 # Multiprocessing function to calculate class divisions of chunks

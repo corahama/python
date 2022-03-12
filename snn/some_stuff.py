@@ -1,9 +1,16 @@
 import pandas as pd
 
+from pr_neuron import get_divs
+
 
 def main():
-    dataset = pd.read_csv('datasets/iris.data', header=None).values
-    divs = [0,50,100,150]
+    # dataset = pd.read_csv('datasets/iris.data', header=None).values
+    # cl_clm = 4
+
+    dataset = pd.read_csv('datasets/wine.data', header=None).values
+    cl_clm = 0
+
+    divs = get_divs(dataset, cl_clm)
 
     # for i in range(len(divs)-1):
     #     print(f'Results for class \'{dataset[divs[i], -1]}\': ', end='')
