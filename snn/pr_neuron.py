@@ -92,6 +92,7 @@ def main():
     # For each class
     cl_track = 1
     colors = ['red', 'blue', 'green', 'black', 'orange', 'brown', 'yellow']
+    plt.clf()
     for cl_idx, cl in enumerate(training_st):
         firing_rates = np.zeros(cl.shape[0], dtype='float')
 

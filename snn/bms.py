@@ -3,7 +3,7 @@ from numpy import arange
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
-    def __init__(self, gamma=0.7, theta=110):
+    def __init__(self, gamma=0.7, theta=7):
         self.gamma = gamma
         self.theta = theta
 

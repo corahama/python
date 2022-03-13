@@ -115,7 +115,6 @@ class PSO():
 def main():
     import pandas as pd
     import matplotlib.pyplot as plt
-    
 
     from pr_neuron import get_divs
     from bms import BMS

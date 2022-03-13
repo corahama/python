@@ -8,10 +8,10 @@ class SRM():
         # self.tc = 0
         self.u = []
         self.spikeTrain = []
-        self.V = 100 # mV -> best = {iris: 4, wine: 100}
+        self.V = 500 # mV -> best = {iris: 4, wine: 500}
         # Eta kernel parameters
-        self.eta_0 = 10 # mV -> best = {iris: 22, wine: 10}
-        self.tau_refr = 10 # ms -> best = {iris: 30, wine: 10}
+        self.eta_0 = 20 # mV -> best = {iris: 22, wine: 20}
+        self.tau_refr = 20 # ms -> best = {iris: 30, wine: 20}
         # Kappa kernel parameters
         # self.R = 36 #mOhms -> unused attribute
         self.tau_m = 4 # ms
@@ -52,10 +52,9 @@ class SRM():
 
         return len(self.spikeTrain)-1
 
-
     def get_firing_trace(self, i_ext):
         self.run(i_ext)
-        return np.array(self.u)
+        return np.array(self.spikeTrain[1:], dtype='float')
 
 
 def main():
@@ -65,11 +64,11 @@ def main():
 
     start = time.time()
 
-    ini, end, step = 100, 160, .5
+    ini, end, step = 500, 800, 5
     frs = np.zeros(int((end-ini)/step), dtype='float')
     for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
         frs[i] = neuron.run(i_ext)
-        # print(f'i_ext({i_ext})={frs[i]}')
+        print(f'i_ext({i_ext})={frs[i]}')
     print('std: ', np.std(frs))
 
     end = time.time()
