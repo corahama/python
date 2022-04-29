@@ -8,10 +8,10 @@ class SRM():
         # self.tc = 0
         self.u = []
         self.spikeTrain = []
-        self.V = 500 # mV -> best = {iris: 4, wine: 500}
+        self.V = 4 # mV -> best = {iris: 4, wine: 500}
         # Eta kernel parameters
-        self.eta_0 = 20 # mV -> best = {iris: 22, wine: 20}
-        self.tau_refr = 20 # ms -> best = {iris: 30, wine: 20}
+        self.eta_0 = 22 # mV -> best = {iris: 22, wine: 20}
+        self.tau_refr = 30 # ms -> best = {iris: 30, wine: 20}
         # Kappa kernel parameters
         # self.R = 36 #mOhms -> unused attribute
         self.tau_m = 4 # ms
@@ -64,7 +64,7 @@ def main():
 
     start = time.time()
 
-    ini, end, step = 500, 800, 5
+    ini, end, step = 500, 1000, 5
     frs = np.zeros(int((end-ini)/step), dtype='float')
     for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
         frs[i] = neuron.run(i_ext)

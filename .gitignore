@@ -1,3 +1,5 @@
-temp.py
+temp*
 test*
 __pycache__/
+snn/results/
+snn/*.png

@@ -3,7 +3,7 @@ from numpy import arange
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
-    def __init__(self, gamma=0.7, theta=7):
+    def __init__(self, gamma=0.68, theta=8):
         self.gamma = gamma
         self.theta = theta
 
@@ -18,15 +18,16 @@ class BMS():
         return fr
 
     def get_firing_trace(self, i_ext):
-        fires_raster = []
+        fire_trace = []
         vt = 0
         for t in range(100):
             vt = self.gamma*vt*(1-(0 if vt < self.theta else 1)) + i_ext
             if vt == i_ext:
-                fires_raster.append(t)
+                fire_trace.append(t)
 
-        fires_raster = np_array(fires_raster[1:])
-        return fires_raster
+        fire_trace = np_array(fire_trace[1:])
+
+        return fire_trace
 
     def get_voltage_trace(self, i_ext):
         vt_trace = arange(100, dtype='float')
@@ -36,14 +37,14 @@ class BMS():
             vt_trace[t] = vt
             vt = self.gamma*vt*(1-(0 if vt < self.theta else 1)) + i_ext
 
-        return vt_trace                
+        return vt_trace
 
 
 # i_ext > (1-gamma)*theta
 def main():
     import numpy as np
 
-    ini, end, step = 140, 160, 1
+    ini, end, step = 0, 15, 1
     frs = np.zeros(int((end-ini)/step), dtype='float')
     for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
         frs[i] = BMS().run(i_ext)

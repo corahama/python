@@ -11,7 +11,7 @@ def parallel_func(arr, i, proc, func):
 class algorithm():
     def __init__(self):
         self.threshold = 2
-    
+
     def run(self):
         arr = np.arange(10)
 

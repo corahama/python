@@ -1,14 +1,14 @@
 import pandas as pd
 
-from pr_neuron import get_divs
+from utilities import get_divs
 
 
 def main():
-    # dataset = pd.read_csv('datasets/iris.data', header=None).values
-    # cl_clm = 4
+    dataset = pd.read_csv('datasets/iris.data', header=None).values
+    cl_clm = 4
 
-    dataset = pd.read_csv('datasets/wine.data', header=None).values
-    cl_clm = 0
+    # dataset = pd.read_csv('datasets/wine.data', header=None).values
+    # cl_clm = 0
 
     ch_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
 
@@ -18,7 +18,7 @@ def main():
     #     print(f'Results for class \'{dataset[divs[i], -1]}\': ', end='')
     #     print('-'.join(f'{dataset[divs[i]:divs[i+1], j].mean():.2f}' for j in range(dataset.shape[1]-1)))
 
-
+    summation_list = []
     for i in range(len(divs)-1):
         summation = 0
         print(f'Results for class \'{dataset[divs[i], cl_clm]}\': ', end='')
@@ -26,9 +26,17 @@ def main():
             mean = dataset[divs[i]:divs[i+1], j].mean()
             summation += mean
             print(f'{mean:.2f}-', end='')
+        summation_list.append(summation)
         print(f'{summation:.2f}')
 
+    for i in range(len(divs)-1):
+        for j in range(*ch_clms):
+            weight = dataset[divs[i]:divs[i+1], j].mean()/summation_list[i]
+            print(f'{weight:.3f}, ', end='')
+        print()
 
+    # hint: Normalizar las caracteristicas. Saca el promedio y multiplica o divide cada caracteristica
+    # hasta llegar al promedio
 
 if __name__ == '__main__':
     main()

@@ -1,9 +1,8 @@
-import sys
+from sys import maxsize
 from multiprocessing import Pool, cpu_count
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 
 class PSO():
@@ -15,7 +14,7 @@ class PSO():
         # self.search_space = search_space
         self.max_iters = max_iters
         self.max_vel = max_vel
-        self.population = 30
+        self.population = 100
         self.c1, self.c2 = .0205, .0205
 
         # Processes
@@ -29,8 +28,7 @@ class PSO():
         self.velocities = np.random.rand(self.population, self.ch_size)
         # for i in range(self.population):
         #     for j in range(0 if i%2 == 0 else 1, self.ch_size, 2):
-        #         self.swarm[i,j] = -self.swarm[i,j]
-        #         self.velocities[i,j] = -self.velocities[i,j]
+        #         self.swarm[i,j], self.velocities[i,j] = -self.swarm[i,j], -self.velocities[i,j]
         self.sw_best = self.swarm.copy()
 
         self.sw_best_fitnesses = np.zeros(self.population, dtype='float')
@@ -44,7 +42,7 @@ class PSO():
 
         self.global_idx = 0
 
-        # Array to track the algorithm evolution
+        # Array to track the evolution of the algorithm
         self.history = np.zeros(self.max_iters, dtype='float')
 
     """Runs the evolutive algorithm"""
@@ -104,19 +102,19 @@ class PSO():
             sdfr[cl_idx] = np.std(firing_rates)
 
         # Calculate dist(AFR)
+        afr = np.sort(afr)
         dis_afr = 0.0
-        for i in range(afr.shape[0]):
-            for j in range(i, afr.shape[0]):
-                dis_afr += abs(afr[j]-afr[i])
+        for i in range(afr.shape[0]-1):
+            dis_afr += afr[i+1]-afr[i]
 
-        return sys.maxsize if dis_afr == 0 else 1/dis_afr + sum(sdfr)
+        return maxsize if dis_afr == 0 else 1/dis_afr + sum(sdfr)
 
 
 def main():
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    from pr_neuron import get_divs
+    from utilities import get_divs
     from bms import BMS
     from srm import SRM
 

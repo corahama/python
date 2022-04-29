@@ -5,5 +5,4 @@
         "--disable=C0111,W0105",
         "--max-line-length=105",
     ],
-    // "python.linting.pycodestyleEnabled": true,
 }
