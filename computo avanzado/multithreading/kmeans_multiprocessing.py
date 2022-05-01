@@ -1,131 +1,76 @@
-from multiprocessing import Pool
-import matplotlib.pyplot as plt
+from multiprocessing import Pool, cpu_count
+from functools import reduce
+
 import numpy as np
 import pandas as pd
-import random
+import matplotlib.pyplot as plt
 
 
-k = 3
-clms = [0,1]
-filename = 'data/iris.data'
-dataset = pd.read_csv(filename, header=None).values[:, clms]
+K = 6
+PATH = 'multithreading/data/wine.data'
+CLMS = [1,2]
 
 
-# function for means comparation
-def are_means_equals(array1, array2):
-    if len(array1) == len(array2):
-        for i in range(len(array1)):
-            if np.array_equal(array1[i], array2[i]) == False:
-                return False
-        return True
-    else:
-        return False
+# parallel function
+def compute_clusters(ds, means):
+    m_avgs = [[0]*len(ds[0])]*len(means)
+    counts = [0]*len(means)
 
-# function for setting up the clusters asynchronously
-def setting_clusters(i):
-    clusters = [[] for i in range(k)]
-    ds_chunk = dataset[(i-1)*chunks:i*chunks]
+    for e in ds:
+        arg_min = np.argmin(tuple(np.linalg.norm(e-mean) for mean in means))
+        m_avgs[arg_min] = tuple(map(lambda ch, d_sum: d_sum+ch, e, m_avgs[arg_min]))
+        counts[arg_min] += 1
 
-    for e in ds_chunk:
-        distances = []
-        for m in means:
-            distances.append(sum([(m[i]-e[i])**2 for i in range(ds_dimensions)]))
-        clusters[distances.index(min(distances))].append(e)
-
-    return clusters
-
-# function for setting up the new means asynchronously
-def setting_means(c):
-    mean = []
-    for i in range(ds_dimensions):
-        mean.append(sum([point[i] for point in clusters[c]])/len(clusters[c]))
-    np.array(mean)
-
-    return mean
+    return m_avgs, counts
 
 
 def main():
-    # Setting up the dataset and number of clusters (n) variable
-    # n = int(input('Introduce la cantidad de clusters: '))
-    # filename = input('Introduce la ruta del archivo con el dataset a utilizar: ')
-    csv = pd.read_csv(filename, header=None)
-    csv = csv.loc[:, [i for i in range(csv.shape[1]) if ((csv[i].dtype == 'float64' or csv[i].dtype == 'int64'))]]
-    # print("Archivo cargado exitosamente.")
+    dataset = pd.read_csv(PATH, header=None).values[:, CLMS]
+    pc = cpu_count()
 
-    # cstm_colms = None
-    # while (cstm_colms != 'si' and cstm_colms != 'no'):
-    #     cstm_colms = input('¿Deseas especificar las columnas del dataset a utilizar (de no ser asi se utilizarán todas las columnas)?: ')
-    #     if cstm_colms == 'si':
-    #         colms = input('Introduce las columnas a utilizar, separadas por coma (ej:1,3,4): ').split(',')
-    #         colms = [int(e) for e in colms]
-    #         print(f"Se utilizaran las columas {colms}")
-    #         dataset = np.array(csv.iloc[:, colms])
-    #     elif cstm_colms == 'no':
-    #         print("Se utilizaran todas las columnas.")
-    #         dataset = np.array(csv.iloc[:, :])
-    #     else:
-    #         print("Respuesta introducida invalida, opciones validas: [si/no]")
+    means = dataset[np.random.choice(range(0,150), size=K, replace=False), :]
 
-    ds_dimensions = dataset.shape[1]
-    ds_size = dataset.shape[0]
-
-    # ***** Algorithm start *****
-
-    # Select n random elements from the dataset
-    means = []
-    for i in range(k):
-        means.append(dataset[random.randint(0,ds_size-1)])
-
-    # Loop for defining clusters
-    do = True
-    new_means = means
+    # run algorithm
+    last_means, do = [], True
     iterations = 0
-    chunks = int(ds_size/k)
-    while are_means_equals(means, new_means) == False or do:
-        means = new_means.copy()
-        clusters = [[] for i in range(k)]
+    while do or not (last_means == means).all():
+        last_means = means.copy()
 
-        # setting clusters asynchronously
-        pool = Pool(k)
-        results = [pool.apply_async(setting_clusters, args=(i,)) for i in range(1, k+1)]
-        pool.close()
-        pool.join()
-        for r in results:
-            c = r.get()
-            for i in range(k):
-                for e in c[i]:
-                    clusters[i].append(e)
+        with Pool(pc) as pool:
+            results = [pool.apply_async(compute_clusters, args=(tuple(map(lambda ft_i:
+                dataset[ft_i], range(i, dataset.shape[0], pc))), last_means)) for i in range(pc)]
+            pool.close()
+            pool.join()
 
-        # setting new means asynchronously
-        new_means = []
-        pool = Pool(k)
-        results = [pool.apply_async(setting_means, args=(i,)) for i in range(len(clusters))]
-        pool.close()
-        pool.join()
-        for r in results:
-            result = r.get()
-            new_means.append(result)
+        # for r in (result.get() for result in results):
+        #     print(', '.join(map(lambda t: '(' + ', '.join(f'{v:.2f}' for v in t) + ')', r)))
 
-        do = False
+        means = reduce(lambda r_1, r_2: tuple(tuple(map(lambda a, b: a+b, t_1, t_2))
+                    for t_1, t_2 in zip(r_1, r_2)), map(lambda r: r.get()[0], results))
+        counts = reduce(lambda r_1, r_2: tuple(map(lambda a,b: a+b, r_1, r_2)),
+                    map(lambda r: r.get()[1], results))
+        means = np.array(tuple(tuple(map(lambda d_m: d_m/c, m)) for m, c in zip(means, counts)))
+
         iterations += 1
-        
-    for i in range(len(clusters)):
-        clusters[i] = np.array(clusters[i])
+        do = False
 
-    print('Numero total de iteraciones antes de la convergencia: ' + str(iterations))
+    print('Itereaciones antes de la convergencia: ', iterations)
 
-    if ds_dimensions == 2:
-        colors = ['green', 'blue', 'red', 'black', 'orange', 'gray']
+    if dataset.shape[1] == 2:
+        colors = ['green', 'blue', 'red', 'black', 'orange', 'purple']
 
-        # Graph designed to work with 2 dimensions
-        for i in range(k) :
-            plt.scatter(clusters[i][:, 0], clusters[i][:, 1], color=colors[i%len(colors)], alpha=0.5)
+        clusters = [([],[]) for _ in range(K)]
+        for e in dataset:
+            arg_min = np.argmin(tuple(np.linalg.norm(e-mean) for mean in means))
+            clusters[arg_min][0].append(e[0])
+            clusters[arg_min][1].append(e[1])
+
+        for i, cluster in enumerate(clusters):
+            plt.scatter(cluster[0], cluster[1], color=colors[i%len(colors)], alpha=0.5)
         plt.show()
 
-    else:
-        for c in clusters:
-            print(c)
+    return means
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

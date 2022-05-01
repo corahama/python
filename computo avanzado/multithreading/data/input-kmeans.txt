@@ -1,0 +1,4 @@
+3
+multithreading/data/iris.data
+si
+0,1
