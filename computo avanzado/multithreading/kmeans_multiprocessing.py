@@ -28,7 +28,7 @@ def main():
     dataset = pd.read_csv(PATH, header=None).values[:, CLMS]
     pc = cpu_count()
 
-    means = dataset[np.random.choice(range(0,150), size=K, replace=False), :]
+    means = dataset[np.random.choice(range(0, dataset.shape[0]), size=K, replace=False), :]
 
     # run algorithm
     last_means, do = [], True
