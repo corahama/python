@@ -14,7 +14,7 @@ from srm import SRM
 
 # Global variables
 DATASET = pd.read_csv('datasets/iris.data', header=None).values
-CL_CLM = 4
+CLASS_CLM = 4
 
 # DATASET = pd.read_csv('datasets/wine.data', header=None).values
 # CL_CLM = 0
@@ -24,60 +24,59 @@ def main(save_results=False):
     if save_results:
         start_time = datetime.now().strftime('%H:%M:%S')
 
-    # global DATASET
-    # dataset_str = input("Introducce la ruta del dataset a trabajar: ")
-    # CL_CLM = int(input("Introduce el indice de la columna de clases: "))
-    # DATASET = pd.read_csv(dataset_str, header=None).sort_values(by=CL_CLM, ignore_index=True).values
+    # global DATASET, CLASS_CLM
+    # path = input("Introducce la ruta del dataset a trabajar: ")
+    # CLASS_CLM = int(input("Introduce el indice de la columna de clases: "))
+    # DATASET = pd.read_csv(path, header=None).sort_values(by=CL_CLM, ignore_index=True).values
 
-    ch_clms = (1, DATASET.shape[1]) if CL_CLM == 0 else (0, DATASET.shape[1]-1)
-    divs = get_divs(DATASET, CL_CLM)
+    ch_clms = (1, DATASET.shape[1]) if CLASS_CLM == 0 else (0, DATASET.shape[1]-1)
+    divs = get_divs(DATASET, CLASS_CLM)
 
-    # sn_model = BMS()
-    sn_model = SRM()
-    assert 'get_firing_trace' in dir(sn_model), 'La clase para modelo neuronal tiene que implementar\
-el metodo \'get_firing_trace\''
-    assert 'run' in dir(sn_model), 'La clase para modelo neuronal tiene que implementar\
+    sn_model = BMS()
+    # sn_model = SRM()
+    assert 'get_firing_trace' in dir(sn_model), 'La clase para el modelo neuronal tiene que \
+implementar el metodo \'get_firing_trace\''
+    assert 'run' in dir(sn_model), 'La clase para el modelo neuronal tiene que implementar\
 el metodo \'run\''
 
     # ***** Setting up training and testing subsets *****
-    # Generate random indexes to extract the testing elements from dataset
-    testing_item_idxs = []
-    rng = np.random.default_rng()
+    # Generate random indeces to extract the testing elements from dataset
+    testing_item_idcs = []
     for i in range(len(divs)-1):
-        indexes = rng.choice(np.arange(divs[i],divs[i+1]), int((divs[i+1]-divs[i])*.1), replace=False)
-        testing_item_idxs.append(indexes)
+        idcs = np.random.choice(np.arange(divs[i],divs[i+1]), int((divs[i+1]-divs[i])*.1), False)
+        testing_item_idcs.append(idcs)
 
     # Generate testing subset
     testing_st = []
-    for indexes in testing_item_idxs:
-        testing_st.append(DATASET[indexes, :])
-    testing_st = np.array(testing_st, dtype='object')
+    for idcs in testing_item_idcs:
+        testing_st.append(DATASET[idcs, :])
+    testing_st = np.array(testing_st, dtype=np.object)
 
     # Generate training subset
-    training_st, summation = np.delete(DATASET, np.concatenate(testing_item_idxs), axis=0), 0
+    training_st, summation = np.delete(DATASET, np.concatenate(testing_item_idcs), axis=0), 0
     for i in range(len(divs)-1):
-        summation += testing_item_idxs[i].shape[0]
+        summation += testing_item_idcs[i].shape[0]
         divs[i+1] -= summation
     training_st = np.split(training_st, divs[1: len(divs)-1])
 
-    del testing_item_idxs, indexes, rng, summation, divs
+    del testing_item_idcs, idcs, summation, divs
 
 
     # ***** Configure model *****
     weights, _ = PSO(training_st, ch_clms, sn_model).run()
     # weights = [0.3037256,  0.10523379, 0.69746353, 0.8838105 ] # iris
-    # weights = [1.03399134, 0.73495792, 0.86025217, 1.71217792, 0.69568314, 0.3161272, 1.37551808,
-    #             0.91079394, 0.69921659, 1.00514106, 0.40010956, 1.26970743, 0.8569052] # wine
+    # weights = [1.03399134, 0.73495792, 0.86025217, 1.71217792, 0.69568314, 0.3161272,
+    # 1.37551808, 0.91079394, 0.69921659, 1.00514106, 0.40010956, 1.26970743, 0.8569052] # wine
     print('weights =', weights, end=' - ')
 
-    afr = np.zeros(len(training_st), dtype='float')
+    afr = np.empty(len(training_st), dtype=np.float64)
 
     cl_track = 1
     colors = ['red', 'blue', 'green', 'black', 'orange', 'brown', 'yellow']
     plt.clf()
     # Compute average firing rates and plot firing trace
     for cl_idx, cl in enumerate(training_st):
-        firing_rates = np.zeros(cl.shape[0], dtype='float')
+        firing_rates = np.empty(cl.shape[0], dtype=np.float64)
 
         # For each element
         for i, e in enumerate(cl):
@@ -85,7 +84,7 @@ el metodo \'run\''
             firing_rates[i] = firing_trace.shape[0]
 
             # Graph firing trace
-            plt.scatter(firing_trace, np.full(firing_trace.shape[0], cl_track+i, dtype='int'),
+            plt.scatter(firing_trace, np.full(firing_trace.shape[0], cl_track+i, dtype=np.int16),
                         c=colors[cl_idx%len(colors)], s=2)
 
         cl_track += cl.shape[0]
@@ -118,8 +117,9 @@ el metodo \'run\''
             if arg_min_idx == cl_idx: accuracy += 1
 
         total_accuracy += accuracy
-        tr_results_str += f'\n· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}'
-    tr_results_str += f'\nTotal accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%'
+        tr_results_str += f'\n· Class \'{e[CLASS_CLM]}\': {accuracy}/{cl.shape[0]}'
+    tr_results_str += f'\nTotal accuracy: \
+                        {100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%'
     print(tr_results_str, end="")
 
     # With testing subset
@@ -140,8 +140,9 @@ el metodo \'run\''
             if arg_min_idx == cl_idx: accuracy += 1
 
         total_accuracy += accuracy
-        te_results_str += f'\n· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}'
-    te_results_str += f'\nTotal accuracy: {100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%'
+        te_results_str += f'\n· Class \'{e[CLASS_CLM]}\': {accuracy}/{cl.shape[0]}'
+    te_results_str += f'\nTotal accuracy: \
+                        {100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%'
     print(te_results_str)
 
     if save_results:

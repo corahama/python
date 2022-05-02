@@ -54,7 +54,7 @@ class SRM():
 
     def get_firing_trace(self, i_ext):
         self.run(i_ext)
-        return np.array(self.spikeTrain[1:], dtype='float')
+        return np.array(self.spikeTrain[1:], dtype=np.float64)
 
 
 def main():
@@ -65,8 +65,8 @@ def main():
     start = time.time()
 
     ini, end, step = 500, 1000, 5
-    frs = np.zeros(int((end-ini)/step), dtype='float')
-    for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
+    frs = np.empty(int((end-ini)/step), dtype=np.float64)
+    for i, i_ext in enumerate(np.arange(ini,end,step, dtype=np.float64)):
         frs[i] = neuron.run(i_ext)
         print(f'i_ext({i_ext})={frs[i]}')
     print('std: ', np.std(frs))

@@ -1,5 +1,5 @@
-from numpy import array as np_array
-from numpy import arange
+import numpy as np
+
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
@@ -25,12 +25,12 @@ class BMS():
             if vt == i_ext:
                 fire_trace.append(t)
 
-        fire_trace = np_array(fire_trace[1:])
+        fire_trace = np.array(fire_trace[1:])
 
         return fire_trace
 
     def get_voltage_trace(self, i_ext):
-        vt_trace = arange(100, dtype='float')
+        vt_trace = np.arange(100, dtype=np.float64)
 
         vt = 0
         for t in range(100):
@@ -45,8 +45,8 @@ def main():
     import numpy as np
 
     ini, end, step = 0, 15, 1
-    frs = np.zeros(int((end-ini)/step), dtype='float')
-    for i, i_ext in enumerate(np.arange(ini,end,step, dtype='float')):
+    frs = np.empty(int((end-ini)/step), dtype=np.float64)
+    for i, i_ext in enumerate(np.arange(ini, end, step, dtype=np.float64)):
         frs[i] = BMS().run(i_ext)
         print(f'i_ext({i_ext})={frs[i]}')
     print(np.std(frs))

@@ -31,7 +31,7 @@ class PSO():
         #         self.swarm[i,j], self.velocities[i,j] = -self.swarm[i,j], -self.velocities[i,j]
         self.sw_best = self.swarm.copy()
 
-        self.sw_best_fitnesses = np.zeros(self.population, dtype='float')
+        self.sw_best_fitnesses = np.empty(self.population, dtype=np.float64)
         pool = Pool(self.proc)
         results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.proc)]
         pool.close()
@@ -43,7 +43,7 @@ class PSO():
         self.global_idx = 0
 
         # Array to track the evolution of the algorithm
-        self.history = np.zeros(self.max_iters, dtype='float')
+        self.history = np.empty(self.max_iters, dtype=np.float64)
 
     """Runs the evolutive algorithm"""
     def run(self):
@@ -87,12 +87,12 @@ class PSO():
 
     """Objective function for evolutive process"""
     def fitness_func(self, values):
-        afr = np.zeros(len(self.dataset), dtype='float')
-        sdfr = np.zeros(len(self.dataset), dtype='float')
+        afr = np.empty(len(self.dataset), dtype=np.float64)
+        sdfr = np.empty(len(self.dataset), dtype=np.float64)
 
         # For each class
         for cl_idx, cl in enumerate(self.dataset):
-            firing_rates = np.zeros(cl.shape[0], dtype='float')
+            firing_rates = np.empty(cl.shape[0], dtype=np.float64)
 
             # For each element
             for i, e in enumerate(cl):
