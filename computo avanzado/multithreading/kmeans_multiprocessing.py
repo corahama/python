@@ -6,11 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-K = 6
-PATH = 'multithreading/data/wine.data'
-CLMS = [1,2]
-
-
 # parallel function
 def compute_clusters(ds, means):
     m_avgs = [[0]*len(ds[0])]*len(means)
@@ -24,11 +19,10 @@ def compute_clusters(ds, means):
     return m_avgs, counts
 
 
-def main():
-    dataset = pd.read_csv(PATH, header=None).values[:, CLMS]
+def run(dataset, k, plot=False):
     pc = cpu_count()
 
-    means = dataset[np.random.choice(range(0, dataset.shape[0]), size=K, replace=False), :]
+    means = dataset[np.random.choice(range(0, dataset.shape[0]), size=k, replace=False), :]
 
     # run algorithm
     last_means, do = [], True
@@ -42,7 +36,7 @@ def main():
             pool.close()
             pool.join()
 
-        # for r in (result.get() for result in results):
+        # for r in (result.get()[0] for result in results):
         #     print(', '.join(map(lambda t: '(' + ', '.join(f'{v:.2f}' for v in t) + ')', r)))
 
         means = reduce(lambda r_1, r_2: tuple(tuple(map(lambda a, b: a+b, t_1, t_2))
@@ -56,10 +50,10 @@ def main():
 
     print('Itereaciones antes de la convergencia: ', iterations)
 
-    if dataset.shape[1] == 2:
+    if plot and dataset.shape[1] == 2:
         colors = ['green', 'blue', 'red', 'black', 'orange', 'purple']
 
-        clusters = [([],[]) for _ in range(K)]
+        clusters = [([],[]) for _ in range(k)]
         for e in dataset:
             arg_min = np.argmin(tuple(np.linalg.norm(e-mean) for mean in means))
             clusters[arg_min][0].append(e[0])
@@ -73,4 +67,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    k = 6
+    path = 'multithreading/data/wine.data'
+    clms = [1,2]
+    dataset = pd.read_csv(path, header=None).values[:, clms]
+
+    run(dataset, k, True)
