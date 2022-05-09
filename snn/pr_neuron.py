@@ -32,6 +32,7 @@ def main(save_results=False):
     ch_clms = (1, dataset.shape[1]) if CL_CLM == 0 else (0, dataset.shape[1]-1)
     divs = get_divs(dataset, CL_CLM)
 
+    # norm_ch(dataset, ch_clms)
 
     sn_model = BMS()
     # sn_model = SRM()
@@ -65,7 +66,7 @@ el metodo \'run\''
 
 
     # ***** Configure model *****
-    weights, _ = PSO(training_st, ch_clms, sn_model, save_graph=save_results).run()
+    weights, _ = PSO(training_st, ch_clms, sn_model, save_plot=save_results).run()
     # weights = [0.3037256,  0.10523379, 0.69746353, 0.8838105 ] # iris
     # weights = [1.03399134, 0.73495792, 0.86025217, 1.71217792, 0.69568314, 0.3161272,
     # 1.37551808, 0.91079394, 0.69921659, 1.00514106, 0.40010956, 1.26970743, 0.8569052] # wine
