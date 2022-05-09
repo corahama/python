@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utilities import get_path
 
 class PSO():
-    def __init__(self, dataset, ch_clms, sn_model, max_iters=50, max_vel=.2):
+    def __init__(self, dataset, ch_clms, sn_model, max_iters=50, max_vel=.2, save_plot=False):
         # Defining initial constants
         self.dataset = dataset # n dimentional numpy array
         self.ch_clms = ch_clms # first and last characteristic columns
@@ -17,9 +17,10 @@ class PSO():
         self.max_vel = max_vel
         self.population = 100
         self.c1, self.c2 = .0205, .0205
+        self.save_plot = save_plot
 
         # Processes
-        self.proc = cpu_count()
+        self.pc = cpu_count()
 
         # SN Model
         self.sn_model = sn_model
@@ -33,12 +34,12 @@ class PSO():
         self.sw_best = self.swarm.copy()
 
         self.sw_best_fitnesses = np.empty(self.population, dtype=np.float64)
-        pool = Pool(self.proc)
-        results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.proc)]
+        pool = Pool(self.pc)
+        results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.pc)]
         pool.close()
         pool.join()
-        for r in results:
-            for i, p_fitness in r.get():
+        for result in (r.get() for r in results):
+            for i, p_fitness in result:
                 self.sw_best_fitnesses[i] = p_fitness
 
         self.global_idx = 0
@@ -50,8 +51,8 @@ class PSO():
     def run(self):
         for iteration in range(self.max_iters):
             # Configuring and executing pool
-            pool = Pool(self.proc)
-            results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.proc)]
+            pool = Pool(self.pc)
+            results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.pc)]
             pool.close()
             pool.join()
 
@@ -83,30 +84,31 @@ class PSO():
             self.history[iteration] = self.sw_best_fitnesses[self.global_idx]
             print(f'iteration {iteration+1}: {self.sw_best_fitnesses[self.global_idx]}')
 
-        plt.plot(range(self.max_iters), self.history)
-        plt.savefig(get_path('w_evolution_history.png'))
+        if self.save_plot:
+            plt.plot(range(self.max_iters), self.history)
+            plt.savefig(get_path('w_evolution_history.png'))
 
         return self.sw_best[self.global_idx], self.history
 
     """Function excecuted by each process in pool"""
     def prll_fitness(self, ini):
-        return [(i, self.fitness_func(self.swarm[i])) for i in range(ini, self.population, self.proc)]
+        return [(i, self.fit_func(self.swarm[i])) for i in range(ini, self.population, self.pc)]
 
     """Objective function for evolutive process"""
-    def fitness_func(self, values):
+    def fit_func(self, vals):
         afr = np.empty(len(self.dataset), dtype=np.float64)
         sdfr = np.empty(len(self.dataset), dtype=np.float64)
 
         # For each class
         for cl_idx, cl in enumerate(self.dataset):
-            firing_rates = np.empty(cl.shape[0], dtype=np.float64)
+            fi_rates = np.empty(cl.shape[0], dtype=np.float64)
 
             # For each element
             for i, e in enumerate(cl):
-                firing_rates[i] = self.sn_model.run(np.dot(e[self.ch_clms[0]:self.ch_clms[1]], values))
+                fi_rates[i] = self.sn_model.run(np.dot(e[self.ch_clms[0]:self.ch_clms[1]], vals))
 
-            afr[cl_idx] = np.mean(firing_rates)
-            sdfr[cl_idx] = np.std(firing_rates)
+            afr[cl_idx] = np.mean(fi_rates)
+            sdfr[cl_idx] = np.std(fi_rates)
 
         # Calculate dist(AFR)
         afr = np.sort(afr)

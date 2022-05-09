@@ -3,7 +3,7 @@ import numpy as np
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
-    def __init__(self, gamma=0.68, theta=9):
+    def __init__(self, gamma=0.68, theta=7):
         self.gamma = gamma
         self.theta = theta
 
