@@ -1,6 +1,6 @@
 import pandas as pd
 
-from utilities import get_divs
+from utilities import get_divs, norm_ch
 
 
 def main():
@@ -11,12 +11,7 @@ def main():
     # cl_clm = 0
 
     ch_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
-
     divs = get_divs(dataset, cl_clm)
-
-    # for i in range(len(divs)-1):
-    #     print(f'Results for class \'{dataset[divs[i], -1]}\': ', end='')
-    #     print('-'.join(f'{dataset[divs[i]:divs[i+1], j].mean():.2f}' for j in range(dataset.shape[1]-1)))
 
     summation_list = []
     for i in range(len(divs)-1):
@@ -27,16 +22,29 @@ def main():
             summation += mean
             print(f'{mean:.2f}-', end='')
         summation_list.append(summation)
-        print(f'{summation:.2f}')
+        print(f'Total: {summation:.2f}')
 
     for i in range(len(divs)-1):
-        for j in range(*ch_clms):
-            weight = dataset[divs[i]:divs[i+1], j].mean()/summation_list[i]
-            print(f'{weight:.3f}, ', end='')
-        print()
+        print(','.join(f'{(dataset[divs[i]:divs[i+1], j].mean()/summation_list[i]):.3f}' for j
+            in range(*ch_clms)))
 
-    # hint: Normalizar las caracteristicas. Saca el promedio y multiplica o divide cada caracteristica
-    # hasta llegar al promedio
+    norm_ch(dataset, ch_clms)
+
+    summation_list = []
+    for i in range(len(divs)-1):
+        summation = 0
+        print(f'Results for class \'{dataset[divs[i], cl_clm]}\': ', end='')
+        for j in range(*ch_clms):
+            mean = dataset[divs[i]:divs[i+1], j].mean()
+            summation += mean
+            print(f'{mean:.2f}-', end='')
+        summation_list.append(summation)
+        print(f'Total: {summation:.2f}')
+
+    for i in range(len(divs)-1):
+        print(','.join(f'{(dataset[divs[i]:divs[i+1], j].mean()/summation_list[i]):.3f}' for j
+            in range(*ch_clms)))
+
 
 if __name__ == '__main__':
     main()

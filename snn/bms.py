@@ -3,7 +3,7 @@ import numpy as np
 
 class BMS():
     # Optimal parameters: gamma=.68, theta=7
-    def __init__(self, gamma=0.68, theta=8):
+    def __init__(self, gamma=0.68, theta=9):
         self.gamma = gamma
         self.theta = theta
 
@@ -44,7 +44,7 @@ class BMS():
 def main():
     import numpy as np
 
-    ini, end, step = 0, 15, 1
+    ini, end, step = 5, 25, 1
     frs = np.empty(int((end-ini)/step), dtype=np.float64)
     for i, i_ext in enumerate(np.arange(ini, end, step, dtype=np.float64)):
         frs[i] = BMS().run(i_ext)

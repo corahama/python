@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 
 # from pso import PSO
 from pso_multiprocessing import PSO
-from save_to_file import save
-from utilities import get_divs
+from utilities import get_divs, norm_ch, save, get_path
 from bms import BMS
 from srm import SRM
 
@@ -32,8 +31,11 @@ def main(save_results=False):
     ch_clms = (1, DATASET.shape[1]) if CLASS_CLM == 0 else (0, DATASET.shape[1]-1)
     divs = get_divs(DATASET, CLASS_CLM)
 
+    norm_ch(DATASET, ch_clms)
+
     sn_model = BMS()
     # sn_model = SRM()
+
     assert 'get_firing_trace' in dir(sn_model), 'La clase para el modelo neuronal tiene que \
 implementar el metodo \'get_firing_trace\''
     assert 'run' in dir(sn_model), 'La clase para el modelo neuronal tiene que implementar\
@@ -50,7 +52,7 @@ el metodo \'run\''
     testing_st = []
     for idcs in testing_item_idcs:
         testing_st.append(DATASET[idcs, :])
-    testing_st = np.array(testing_st, dtype=np.object)
+    testing_st = np.array(testing_st, dtype='object')
 
     # Generate training subset
     training_st, summation = np.delete(DATASET, np.concatenate(testing_item_idcs), axis=0), 0
@@ -91,7 +93,7 @@ el metodo \'run\''
         afr[cl_idx] = np.mean(firing_rates)
 
     print('afr =', afr)
-    plt.savefig('firing_trace.png')
+    plt.savefig(get_path('firing_trace.png'))
 
     del cl_track, firing_trace, colors, firing_rates
 
@@ -153,4 +155,4 @@ el metodo \'run\''
 
 
 if __name__ == '__main__':
-    main()
+    main(save_results=True)

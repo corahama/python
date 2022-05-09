@@ -4,13 +4,14 @@ from multiprocessing import Pool, cpu_count
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utilities import get_path
 
 class PSO():
-    def __init__(self, dataset, ch_cols, sn_model, max_iters=50, max_vel=.2):
+    def __init__(self, dataset, ch_clms, sn_model, max_iters=50, max_vel=.2):
         # Defining initial constants
         self.dataset = dataset # n dimentional numpy array
-        self.ch_cols = ch_cols # first and last characteristic columns
-        self.ch_size = ch_cols[1] - ch_cols[0]
+        self.ch_clms = ch_clms # first and last characteristic columns
+        self.ch_size = ch_clms[1] - ch_clms[0]
         # self.search_space = search_space
         self.max_iters = max_iters
         self.max_vel = max_vel
@@ -71,13 +72,19 @@ class PSO():
                     if abs(vel_dim) > self.max_vel:
                         vel[j] = self.max_vel * vel_dim/abs(vel_dim)
 
-                self.swarm[i] = self.swarm[i] + self.velocities[i]
+                position = self.swarm[i] + self.velocities[i]
+                for j, pos_dim in enumerate(position):
+                    if pos_dim > 1:
+                        position[j] = 1
+                    elif pos_dim < 0:
+                        position[j] = 0
+                self.swarm[i] = position
 
             self.history[iteration] = self.sw_best_fitnesses[self.global_idx]
             print(f'iteration {iteration+1}: {self.sw_best_fitnesses[self.global_idx]}')
 
         plt.plot(range(self.max_iters), self.history)
-        plt.savefig('w_evolution_history.png')
+        plt.savefig(get_path('w_evolution_history.png'))
 
         return self.sw_best[self.global_idx], self.history
 
@@ -96,7 +103,7 @@ class PSO():
 
             # For each element
             for i, e in enumerate(cl):
-                firing_rates[i] = self.sn_model.run(np.dot(e[self.ch_cols[0]:self.ch_cols[1]], values))
+                firing_rates[i] = self.sn_model.run(np.dot(e[self.ch_clms[0]:self.ch_clms[1]], values))
 
             afr[cl_idx] = np.mean(firing_rates)
             sdfr[cl_idx] = np.std(firing_rates)
