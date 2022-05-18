@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # from pso import PSO
-from pso_multiprocessing import PSO
+from pso_multiprocessing import PSOMultiprocessing as PSO
 from utilities import get_divs, norm_ch, save, get_path
 from bms import BMS
 from srm import SRM
@@ -32,7 +32,7 @@ def main(save_results=False):
     ch_clms = (1, dataset.shape[1]) if CL_CLM == 0 else (0, dataset.shape[1]-1)
     divs = get_divs(dataset, CL_CLM)
 
-    # norm_ch(dataset, ch_clms)
+    norm_ch(dataset, ch_clms)
 
     sn_model = BMS()
     # sn_model = SRM()
