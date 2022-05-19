@@ -7,12 +7,11 @@ import matplotlib.pyplot as plt
 
 # from pso import PSO
 from pso_multiprocessing import PSOMultiprocessing as PSO
-from utilities import get_divs, norm_ch, save, get_path
+from utils import get_divs, norm_features, save, get_path
 from bms import BMS
 from srm import SRM
 
 
-# Global variables
 PATH = 'datasets/iris.data'
 CL_CLM = 4
 
@@ -29,13 +28,13 @@ def main(save_results=False):
     # CL_CLM = int(input("Introduce el indice de la columna de clases: "))
     dataset = pd.read_csv(PATH, header=None).sort_values(by=CL_CLM, ignore_index=True).values
 
-    ch_clms = (1, dataset.shape[1]) if CL_CLM == 0 else (0, dataset.shape[1]-1)
+    fe_clms = (1, dataset.shape[1]) if CL_CLM == 0 else (0, dataset.shape[1]-1)
     divs = get_divs(dataset, CL_CLM)
 
-    norm_ch(dataset, ch_clms)
+    norm_features(dataset, fe_clms)
 
-    sn_model = BMS()
-    # sn_model = SRM()
+    # sn_model = BMS()
+    sn_model = SRM()
 
     assert 'get_firing_trace' in dir(sn_model), 'La clase para el modelo neuronal tiene que \
 implementar el metodo \'get_firing_trace\''
@@ -66,7 +65,7 @@ el metodo \'run\''
 
 
     # ***** Configure model *****
-    weights, _ = PSO(training_st, ch_clms, sn_model, save_plot=save_results).run()
+    weights, _ = PSO(training_st, fe_clms, sn_model, save_plot=save_results).run()
     # weights = [0.3037256,  0.10523379, 0.69746353, 0.8838105 ] # iris
     # weights = [1.03399134, 0.73495792, 0.86025217, 1.71217792, 0.69568314, 0.3161272,
     # 1.37551808, 0.91079394, 0.69921659, 1.00514106, 0.40010956, 1.26970743, 0.8569052] # wine
@@ -84,7 +83,7 @@ el metodo \'run\''
 
             # For each element
             for i, e in enumerate(cl):
-                fi_trace = sn_model.get_firing_trace(np.dot(e[ch_clms[0]:ch_clms[1]], weights))
+                fi_trace = sn_model.get_firing_trace(np.dot(e[fe_clms[0]:fe_clms[1]], weights))
                 firing_rates[i] = fi_trace.shape[0]
 
                 # Graph firing trace
@@ -105,7 +104,7 @@ el metodo \'run\''
 
             # For each element
             for i, e in enumerate(cl):
-                firing_rates[i] = sn_model.run(np.dot(e[ch_clms[0]:ch_clms[1]], weights))
+                firing_rates[i] = sn_model.run(np.dot(e[fe_clms[0]:fe_clms[1]], weights))
 
             afr[cl_idx] = np.mean(firing_rates)
 
@@ -122,9 +121,7 @@ el metodo \'run\''
         accuracy = 0
 
         for e in cl:
-            # fr = sn_model.run(np.dot(e[ch_cols[0]:ch_cols[1]], weights))
-            np_dot = np.dot(e[ch_clms[0]:ch_clms[1]], weights)
-            fr = sn_model.run(np_dot)
+            fr = sn_model.run(np.dot(e[fe_clms[0]:fe_clms[1]], weights))
 
             arg_min_idx, dis = 0, abs(afr[0]-fr)
             for i in range(1, afr.shape[0]):
@@ -147,7 +144,7 @@ el metodo \'run\''
         accuracy = 0
 
         for e in cl:
-            fr = sn_model.run(np.dot(e[ch_clms[0]:ch_clms[1]], weights))
+            fr = sn_model.run(np.dot(e[fe_clms[0]:fe_clms[1]], weights))
 
             arg_min_idx, dis = 0, abs(afr[0]-fr)
             for i in range(1, afr.shape[0]):
@@ -173,4 +170,4 @@ el metodo \'run\''
 
 
 if __name__ == '__main__':
-    main(save_results=False)
+    main(save_results=True)

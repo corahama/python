@@ -6,12 +6,12 @@ from pso import PSO
 
 
 class PSOMultiprocessing(PSO):
-    def __init__(self, dataset, ch_clms, sn_model, iters=50, save_plot=False):
-        super().__init__(dataset, ch_clms, sn_model, iters, save_plot, pc=cpu_count())
+    def __init__(self, dataset, fe_clms, sn_model, save_plot=False):
+        super().__init__(dataset, fe_clms, sn_model, save_plot, iters=30, pop=200, pc=cpu_count())
 
     """Function to set the initial best fitnesses"""
     def set_fitnesses(self):
-        sw_best_fitnesses = np.empty(self.population, dtype=np.float64)
+        sw_best_fitnesses = np.empty(self.pop, dtype=np.float64)
 
         pool = Pool(self.pc)
         results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.pc)]
@@ -43,22 +43,22 @@ class PSOMultiprocessing(PSO):
 
     """Function excecuted by each process in pool"""
     def prll_fitness(self, ini):
-        return [(i, self.fit_func(self.swarm[i])) for i in range(ini, self.population, self.pc)]
+        return [(i, self.fit_func(self.swarm[i])) for i in range(ini, self.pop, self.pc)]
 
 
 def main():
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    from utilities import get_divs, norm_ch
+    from utils import get_divs, norm_features
     from bms import BMS
     from srm import SRM
 
 
     dataset = pd.read_csv('datasets/iris.data', header=None).values
     cl_clm = 4
-    ch_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
-    norm_ch(dataset, ch_clms)
+    fe_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
+    norm_features(dataset, fe_clms)
 
     cl_divs = get_divs(dataset, cl_clm)
     dataset = np.split(dataset, cl_divs[1: len(cl_divs)-1])
@@ -66,7 +66,7 @@ def main():
     sn_model = BMS()
     # sn_model = SRM()
 
-    best, history = PSOMultiprocessing(dataset, ch_clms, sn_model).run()
+    best, history = PSOMultiprocessing(dataset, fe_clms, sn_model).run()
     print('[', ', '.join(map(str, best)), ']')
     plt.plot(range(history.shape[0]), history, c='b')
     plt.show()

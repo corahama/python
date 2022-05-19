@@ -36,9 +36,9 @@ def get_divs(ds, cl_clm):
     return divs
 
 
-"""Function to normalize characteristics in dataset"""
-def norm_ch(dataset, ch_clms):
-    for j in range(*ch_clms):
+"""Function to normalize features in dataset"""
+def norm_features(dataset, fe_clms):
+    for j in range(*fe_clms):
         min_val, max_val = min(dataset[:, j]), max(dataset[:, j])
         diff = max_val - min_val
         for i in range(dataset.shape[0]):
@@ -85,6 +85,6 @@ if __name__ == '__main__':
     # dataset = pd.read_csv('datasets/iris.data', header=None).values
     # cl_clm = 4
 
-    # ch_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
+    # fe_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
 
-    # norm_ch(dataset, ch_clms)
+    # norm_features(dataset, fe_clms)
