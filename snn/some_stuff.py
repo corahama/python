@@ -19,11 +19,12 @@ def compute_fe_means():
     summation_list = []
     for i in range(len(DIVS)-1):
         summation = 0
-        print(f'Results for class \'{DATASET[DIVS[i], CL_CLM]}\': ', end='')
+        print(f'Results for class \'{DATASET[DIVS[i], CL_CLM]}\': ', end='\t')
         for j in range(*FE_CLMS):
             mean = DATASET[DIVS[i]:DIVS[i+1], j].mean()
+            std = DATASET[DIVS[i]:DIVS[i+1], j].std()
             summation += mean
-            print(f'{mean:.2f}-', end='')
+            print(f'({mean:.2f},{std:.2f})-', end='')
         summation_list.append(summation)
         print(f'Total: {summation:.2f}')
 

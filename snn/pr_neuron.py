@@ -66,7 +66,7 @@ el metodo \'run\''
 
     # ***** Configure model *****
     weights, _ = PSO(training_st, fe_clms, sn_model, save_plot=save_results).run()
-    # weights = [0.3037256,  0.10523379, 0.69746353, 0.8838105 ] # iris
+    # weights = [-0.42493396, -0.21774958,  1.18442043,  0.52923564 ] # iris
     # weights = [1.03399134, 0.73495792, 0.86025217, 1.71217792, 0.69568314, 0.3161272,
     # 1.37551808, 0.91079394, 0.69921659, 1.00514106, 0.40010956, 1.26970743, 0.8569052] # wine
     print('weights =', weights, end=' - ')
@@ -83,19 +83,19 @@ el metodo \'run\''
 
             # For each element
             for i, e in enumerate(cl):
-                fi_trace = sn_model.get_firing_trace(np.dot(e[fe_clms[0]:fe_clms[1]], weights))
-                firing_rates[i] = fi_trace.shape[0]
+                firing_trace, firing_rates[i] = sn_model.get_firing_trace(np.dot(
+                                                e[fe_clms[0]:fe_clms[1]], weights))
 
                 # Graph firing trace
-                plt.scatter(fi_trace, np.full(fi_trace.shape[0], cl_track+i, dtype=np.int16),
-                            c=colors[cl_idx%len(colors)], s=2)
+                plt.scatter(firing_trace, np.full(firing_trace.shape[0], cl_track+i,
+                                    dtype=np.int16), c=colors[cl_idx%len(colors)], s=2)
 
             cl_track += cl.shape[0]
             afr[cl_idx] = np.mean(firing_rates)
 
         plt.savefig(get_path('firing_trace.png'))
 
-        del cl_track, fi_trace, colors
+        del cl_track, firing_trace, colors
 
     else:
         # Compute average firing rates
@@ -134,7 +134,7 @@ el metodo \'run\''
         total_accuracy += accuracy
         tr_results_str += f'\n· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}'
     tr_results_str += f'\nTotal accuracy: \
-                        {100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%'
+{100*total_accuracy/sum([cl.shape[0] for cl in training_st]):.2f}%'
     print(tr_results_str, end="")
 
     # With testing subset
@@ -157,7 +157,7 @@ el metodo \'run\''
         total_accuracy += accuracy
         te_results_str += f'\n· Class \'{e[CL_CLM]}\': {accuracy}/{cl.shape[0]}'
     te_results_str += f'\nTotal accuracy: \
-                        {100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%'
+{100*total_accuracy/sum([cl.shape[0] for cl in testing_st]):.2f}%'
     print(te_results_str)
 
     if save_results:

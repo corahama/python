@@ -15,7 +15,7 @@ class BMS():
             if vt == i_ext:
                 fr += 1
 
-        return fr
+        return fr/100
 
     def get_firing_trace(self, i_ext):
         fire_trace = []
@@ -25,9 +25,7 @@ class BMS():
             if vt == i_ext:
                 fire_trace.append(t)
 
-        fire_trace = np.array(fire_trace[1:])
-
-        return fire_trace
+        return np.array(fire_trace[1:]), (len(fire_trace)-1)/100
 
     def get_voltage_trace(self, i_ext):
         vt_trace = np.arange(100, dtype=np.float64)

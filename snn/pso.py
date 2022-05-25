@@ -32,8 +32,7 @@ class PSO():
         #     for j in range(0 if i%2 == 0 else 1, self.fe_size, 2):
         #         self.swarm[i,j], self.velocities[i,j] = -self.swarm[i,j], -self.velocities[i,j]
         self.sw_best = self.swarm.copy()
-        self.sw_best_fitnesses = np.array([self.fit_func(p) for p in self.swarm]
-            ) if not hasattr(self, 'set_fitnesses') else self.set_fitnesses()
+        self.sw_best_fitnesses = np.full(self.pop, np.inf)
         self.global_idx = 0
 
         # Array to track the evolution of the algorithm
@@ -53,17 +52,12 @@ class PSO():
                 self.velocities[i] = vel + np.random.rand(self.fe_size)*self.c1*(
                         self.sw_best[i]-self.swarm[i]) + np.random.rand(self.fe_size)*self.c2*(
                         self.sw_best[self.global_idx]-self.swarm[i])
+
                 for j, vel_dim in enumerate(self.velocities[i]):
                     if abs(vel_dim) > self.max_vel:
                         vel[j] = self.max_vel * vel_dim/abs(vel_dim)
 
-                position = self.swarm[i] + self.velocities[i]
-                for j, pos_dim in enumerate(position):
-                    if pos_dim > 1:
-                        position[j] = 1
-                    # elif pos_dim < 0:
-                    #     position[j] = 0
-                self.swarm[i] = position
+                self.swarm[i] = self.swarm[i] + self.velocities[i]
 
             self.history[iteration] = self.sw_best_fitnesses[self.global_idx]
             print(f'iteration {iteration+1}: {self.sw_best_fitnesses[self.global_idx]}')
@@ -84,7 +78,7 @@ class PSO():
 
         return
 
-    """Objective function to evolutive process"""
+    """Objective function of the evolutive process"""
     def fit_func(self, vals):
         afr = np.empty(len(self.dataset), dtype=np.float64)
         sdfr = np.empty(len(self.dataset), dtype=np.float64)
@@ -101,12 +95,11 @@ class PSO():
             sdfr[cl_idx] = np.std(fi_rates)
 
         # Calculate dist(AFR)
-        afr = np.sort(afr)
         dis_afr = 0.0
         for i in range(afr.shape[0]-1):
-            dis_afr += afr[i+1]-afr[i]
+            dis_afr += abs(afr[i+1]-afr[i])
 
-        return maxsize if dis_afr == 0 or sum(sdfr) == 0 else 1/dis_afr + 1/sum(sdfr)
+        return maxsize if dis_afr == 0 else 1/dis_afr + sum(sdfr)
 
 
 def main():
@@ -115,12 +108,12 @@ def main():
     from bms import BMS
     from srm import SRM
 
-    # dataset = pd.read_csv('datasets/iris.data', header=None).values
-    # cl_clm = 4
-    dataset = pd.read_csv('datasets/wine.data', header=None).values
-    cl_clm = 0
+    dataset = pd.read_csv('datasets/iris.data', header=None).values
+    cl_clm = 4
+    # dataset = pd.read_csv('datasets/wine.data', header=None).values
+    # cl_clm = 0
     fe_clms = (1, dataset.shape[1]) if cl_clm == 0 else (0, dataset.shape[1]-1)
-    norm_features(dataset, fe_clms)
+    # norm_features(dataset, fe_clms)
 
     cl_divs = get_divs(dataset, cl_clm)
     dataset = np.split(dataset, cl_divs[1: len(cl_divs)-1])
@@ -128,7 +121,8 @@ def main():
     # sn_model = BMS()
     sn_model = SRM()
 
-    best, history = PSO(dataset, fe_clms, sn_model).run()
+    # best, history = PSO(dataset, fe_clms, sn_model).run()
+    best, history = PSO(dataset, fe_clms, sn_model).fit_func(np.array([]))
     print('[', ', '.join(map(str, best)), ']')
     plt.plot(range(history.shape[0]), history, c='b')
     plt.show()

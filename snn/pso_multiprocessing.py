@@ -7,22 +7,7 @@ from pso import PSO
 
 class PSOMultiprocessing(PSO):
     def __init__(self, dataset, fe_clms, sn_model, save_plot=False):
-        super().__init__(dataset, fe_clms, sn_model, save_plot, iters=30, pop=200, pc=cpu_count())
-
-    """Function to set the initial best fitnesses"""
-    def set_fitnesses(self):
-        sw_best_fitnesses = np.empty(self.pop, dtype=np.float64)
-
-        pool = Pool(self.pc)
-        results = [pool.apply_async(self.prll_fitness, args=(i,)) for i in range(self.pc)]
-        pool.close()
-        pool.join()
-
-        for result in (r.get() for r in results):
-            for i, p_fitness in result:
-                sw_best_fitnesses[i] = p_fitness
-
-        return sw_best_fitnesses
+        super().__init__(dataset, fe_clms, sn_model, save_plot, pop=200, pc=cpu_count())
 
     """Function to compare fitnesses of the actual swarm population vs historically best ones"""
     def update_best_particles(self):
@@ -41,7 +26,7 @@ class PSOMultiprocessing(PSO):
 
         return
 
-    """Function excecuted by each process in pool"""
+    """Function excecuted by each process in the pool"""
     def prll_fitness(self, ini):
         return [(i, self.fit_func(self.swarm[i])) for i in range(ini, self.pop, self.pc)]
 
