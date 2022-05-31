@@ -38,7 +38,7 @@ class PSO():
         # Array to track the evolution of the algorithm
         self.history = np.empty(self.iters, dtype=np.float64)
 
-    """Runs the evolutive algorithm"""
+    """Run the evolutive algorithm"""
     def run(self):
         for iteration in range(self.iters):
             # Compare actual swarm fitnesses vs best ones
@@ -81,8 +81,9 @@ class PSO():
     """Objective function of the evolutive process"""
     def fit_func(self, vals):
         afr = np.empty(len(self.dataset), dtype=np.float64)
-        sdfr = np.empty(len(self.dataset), dtype=np.float64)
+        # sdfr = np.empty(len(self.dataset), dtype=np.float64)
 
+        # Get the average firing rates per class
         # For each class
         for cl_idx, cl in enumerate(self.dataset):
             fi_rates = np.empty(cl.shape[0], dtype=np.float64)
@@ -92,14 +93,28 @@ class PSO():
                 fi_rates[i] = self.sn_model.run(np.dot(e[self.fe_clms[0]:self.fe_clms[1]], vals))
 
             afr[cl_idx] = np.mean(fi_rates)
-            sdfr[cl_idx] = np.std(fi_rates)
+            # sdfr[cl_idx] = np.std(fi_rates)
 
-        # Calculate dist(AFR)
-        dis_afr = 0.0
-        for i in range(afr.shape[0]-1):
-            dis_afr += abs(afr[i+1]-afr[i])
+        # Compute accuracy with the obtained afrs
+        success = 0
+        # For each class
+        for cl_idx, cl in enumerate(self.dataset):
+            # For each element
+            for i, e in enumerate(cl):
+                m_idx = np.argmin(tuple(abs(self.sn_model.run(np.dot(
+                    e[self.fe_clms[0]:self.fe_clms[1]], vals))-fr) for fr in afr))
 
-        return maxsize if dis_afr == 0 else 1/dis_afr + sum(sdfr)
+                if m_idx == cl_idx:
+                    success += 1
+
+        # 1 - acc
+        return 1 - success/sum(tuple(cl.shape[0] for cl in self.dataset))
+        # # Calculate dist(AFR)
+        # dis_afr = 0.0
+        # for i in range(afr.shape[0]-1):
+        #     dis_afr += abs(afr[i+1]-afr[i])
+
+        # return maxsize if dis_afr == 0 else 1/dis_afr + sum(sdfr)
 
 
 def main():

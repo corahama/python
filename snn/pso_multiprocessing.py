@@ -7,7 +7,7 @@ from pso import PSO
 
 class PSOMultiprocessing(PSO):
     def __init__(self, dataset, fe_clms, sn_model, save_plot=False):
-        super().__init__(dataset, fe_clms, sn_model, save_plot, pop=200, pc=cpu_count())
+        super().__init__(dataset, fe_clms, sn_model, save_plot, pop=200, iters=40, pc=cpu_count())
 
     """Function to compare fitnesses of the actual swarm population vs historically best ones"""
     def update_best_particles(self):

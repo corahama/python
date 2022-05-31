@@ -19,7 +19,7 @@ CL_CLM = 4
 # CL_CLM = 0
 
 
-def main(save_results=False):
+def main(save_results=False, normalize_features=False):
     if save_results:
         start_time = datetime.now().strftime('%H:%M:%S')
 
@@ -31,10 +31,11 @@ def main(save_results=False):
     fe_clms = (1, dataset.shape[1]) if CL_CLM == 0 else (0, dataset.shape[1]-1)
     divs = get_divs(dataset, CL_CLM)
 
-    norm_features(dataset, fe_clms)
+    if normalize_features: norm_features(dataset, fe_clms)
 
     # sn_model = BMS()
     sn_model = SRM()
+    model_parms = dict(filter(lambda i: not isinstance(i[1], list), sn_model.__dict__.items()))
 
     assert 'get_firing_trace' in dir(sn_model), 'La clase para el modelo neuronal tiene que \
 implementar el metodo \'get_firing_trace\''
@@ -161,8 +162,9 @@ el metodo \'run\''
     print(te_results_str)
 
     if save_results:
-        save(start_time=start_time, dataset=re.search(r'/(\S+\.\S+$)', PATH).group(1),
-            sn_model=sn_model.__class__.__name__, weights=weights, afr=afr,
+        save(start_time=start_time, dataset=re.search(r'/(\S+\.\S+$)', PATH).group(1), 
+            normalize_features=normalize_features, sn_model=sn_model.__class__.__name__, 
+            model_parameters=model_parms, weights=weights, afr=afr,
             training_results=tr_results_str, testing_results=te_results_str,
             finish_time=datetime.now().strftime('%H:%M:%S'))
 
