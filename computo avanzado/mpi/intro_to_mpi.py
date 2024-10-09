@@ -1,4 +1,4 @@
-# mpirun.mpich -np 4 python3 temp.py
+# mpiexec -n 4 python temp.py
 from mpi4py import MPI
 from random import randint
 

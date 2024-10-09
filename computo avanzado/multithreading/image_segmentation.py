@@ -3,8 +3,8 @@ import cv2
 
 from kmeans_multiprocessing import run
 
-K = 2
-path = 'multithreading/data/image.jpg'
+K = 4
+path = 'data/image.jpg'
 
 img = cv2.imread(path)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -19,4 +19,4 @@ res = means[labels]
 result_image = res.reshape((img.shape))
 
 result_image = cv2.cvtColor(result_image, cv2.COLOR_RGB2BGR)
-cv2.imwrite('multithreading/data/result-img.jpg', result_image)
+cv2.imwrite('data/result-img.jpg', result_image)

@@ -1,5 +1,7 @@
 temp*
-test*
+test.*
 __pycache__/
 snn/results/
 snn/*.png
+.vscode/
+x/

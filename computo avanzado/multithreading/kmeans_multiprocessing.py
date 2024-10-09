@@ -18,7 +18,6 @@ def compute_clusters(ds, means):
 
     return m_avgs, counts
 
-
 def run(dataset, k, plot=False):
     pc = cpu_count()
 

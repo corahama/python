@@ -124,3 +124,4 @@ if __name__ == "__main__":
     else:
         for c in clusters:
             print(c)
+            

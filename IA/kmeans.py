@@ -43,10 +43,10 @@ def setting_means(c):
 # ***** Main code *****
 if __name__ == "__main__":
     # Setting up the dataset and number of clusters (n) variable
-    n = int(input('Introduce la cantidad de clusters: '))
-    # n = 3
-    file_path = input('Introduce la ruta del archivo con el dataset a utilizar: ')
-    # file_path = 'datasets/iris.data'
+    # n = int(input('Introduce la cantidad de clusters: '))
+    n = 4
+    # file_path = input('Introduce la ruta del archivo con el dataset a utilizar: ')
+    file_path = 'datasets/iris.data'
     csv = pd.read_csv(file_path, header=None)
 
     colms = input('Introduce las columnas a utilizar, separadas por coma (ej:1,3,4): ').split(',')
